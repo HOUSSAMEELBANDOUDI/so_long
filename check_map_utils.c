@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   check_map_utils.c                                  :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: hel-band <hel-band@student.1337.ma>        +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/03/27 16:17:10 by hel-band          #+#    #+#             */
+/*   Updated: 2024/03/27 16:17:13 by hel-band         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "so_long.h"
 
 void	ft_putchar(char c)
@@ -17,26 +29,50 @@ void	ft_putstr(char *s)
 	}
 }
 
-void    ft_get_map(t_map *map)
+void	ft_putnbr(int n)
+{
+	long	nb;
+
+	nb = n;
+	if (nb < 0)
+	{
+		ft_putchar('-');
+		nb *= -1;
+	}
+	if (nb > 9)
+	{
+		ft_putnbr(nb / 10);
+		ft_putchar((nb % 10) + 48);
+	}
+	else
+		ft_putchar(nb + 48);
+}
+
+void    ft_count_lines(t_map *map) 
 {
     char    *str;
     int     fd;
-    int     j;
 
     map->lines = 0;
     fd = open(map->file, O_RDONLY);
     if (fd < 0)
     {
-        //printf("Error: open file failed\n");
-        perror ("Error");
+        perror("Error");
         exit(1);
     }
-    while ((str = get_next_line(fd)) != NULL)
-    {
+    while ((str = get_next_line(fd)) != NULL) {
         map->lines++;
         free(str);
     }
     close(fd);
+}
+
+void    ft_get_map(t_map *map)
+{
+    int j;
+    int fd;
+
+    ft_count_lines(map);
     map->carte = ft_calloc(sizeof(char *), map->lines);
     if (!map->carte)
     {
@@ -44,6 +80,11 @@ void    ft_get_map(t_map *map)
         exit(1);
     }
     fd = open(map->file, O_RDONLY);
+    if (fd < 0)
+    {
+        perror("Error");
+        exit(1);
+    }
     j = 0;
     while (j < map->lines)
         map->carte[j++] = get_next_line(fd);
@@ -51,39 +92,3 @@ void    ft_get_map(t_map *map)
     map->columns = ft_strlen(map->carte[0]) - 1;
 }
 
-int main(int ac, char **av)
-{
-    if (ac != 2)
-    {
-        ft_putstr("Usage: invalid [map_file]\n");
-        return (1);
-    }
-    t_map *map = malloc(sizeof(t_map));
-    t_data *data = malloc(sizeof(t_data));
-    t_img *img = malloc(sizeof(t_img));
-
-    
-    if (!map || !data || !img)
-    {
-        ft_putstr("Memory allocation failed");
-        return (1);
-    }
-
-    map->file = av[1];
-    ft_get_map(map);
-    ft_check_characters(map);
-    ft_check_wall(map);
-    ft_is_rectangular(map);
-    ft_check_name(map);
-    ft_check_path(map);
-    data->img = img;
-    data->map = map;
-    ft_init(data, map);
-    ft_get_images(data, map);
-    mlx_loop(data->mlx_ptr);
-
-
-    ft_free(map);
-    free(map);
-    return (0);
-}
